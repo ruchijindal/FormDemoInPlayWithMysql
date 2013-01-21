@@ -56,6 +56,35 @@ class ModelSpec extends Specification with BeforeAfter {
     }
   }
 
+  "find employee by employee id" in {
+    evolutionFor("default")
+    running(FakeApplication()) {
+      DB.withConnection {
+        implicit connection =>
+          Employee.delete
+          val employee = Employee(NotAssigned, "ruchi@knoldus.com", "123456")
+          Employee.insert(employee)
+          val employee_Id = Employee.findMaxEmployeeId
+          val employeeFound = Employee.findByEmployeeId(employee_Id)
+          employeeFound.get.email must equalTo("ruchi@knoldus.com")
+      }
+    }
+  }
+
+  "authenticate employee" in {
+    evolutionFor("default")
+    running(FakeApplication()) {
+      DB.withConnection {
+        implicit connection =>
+          Employee.delete
+          val employee = Employee(NotAssigned, "ruchi@knoldus.com", "123456")
+          Employee.insert(employee)
+          val employeeFound = Employee.authenticate(employee)
+          employeeFound.get.email must equalTo("ruchi@knoldus.com")
+      }
+    }
+  }
+
   override def after {
     running(FakeApplication()) {
       DB.withConnection {
