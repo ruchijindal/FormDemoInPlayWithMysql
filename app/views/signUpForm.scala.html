@@ -1,10 +1,10 @@
-@(loginForm:Form[Employee],message:String)
+@(signupForm: Form[Employee],message:String)
+
 @import helper._
 @import helper.twitterBootstrap._
 
-
 @title = {
-    Form Demo in Play2.0 With Mysql As Database
+    Sign Up Form in Play2.0
 }
 
 @main(title) {
@@ -14,34 +14,41 @@
   			<strong style="text-transform: capitalize;">@Common.alert.alertType ! </strong>@Common.alert.message  
 		</div> 
 		}
-
-@helper.form(action = routes.Application.authenticateUser) {
+    
+    @helper.form(action = routes.Application.createEmployee) {
         
         <fieldset>
             <legend>@message</legend>
-                       
+            
+           
+            
             @inputText(
-                loginForm("email"), '_label -> "Email ",
+                signupForm("email"), '_label -> "Email",
                 '_help -> "Enter a valid email address."
             )
             
             @inputPassword(
-                loginForm("password"), 
+                signupForm("password.main"), 
                 '_label -> "Password",
                 '_help -> "A password must be at least 6 characters. "
             )
-                        
+            
+            @inputPassword(
+                signupForm("password.confirm"), 
+                '_label -> "Repeat password",
+                '_help -> "Please repeat your password again.",
+                '_error -> signupForm.error("password")
+            )
+            
         </fieldset>
         
-         <div class="actions">
-            <input type="submit" class="btn primary" value="Log in ">
-            Or
-            <small><a href="@routes.Application.siginUpForm">Sign Up </a></small>
-            
+              
+       
+        
+        <div class="actions">
+            <input type="submit" class="btn primary" value="Sign Up">
         </div>
         
-       }
-    
-   
+    }
     
 }
