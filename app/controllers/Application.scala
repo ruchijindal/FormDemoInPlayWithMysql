@@ -51,7 +51,7 @@ object Application extends Controller {
       "name" -> nonEmptyText,
       "designation" -> nonEmptyText,
       "address" -> nonEmptyText,
-      "contact_no" -> (text verifying pattern("""[0-9.+]+""".r, error = "A valid phone number is required")))(EmployeeDetail.apply)(EmployeeDetail.unapply))
+      "contact_no" -> (text(minLength = 10,maxLength=10) verifying pattern("""[0-9.+]+""".r, error = "A valid phone number is required")))(EmployeeDetail.apply)(EmployeeDetail.unapply))
 
   def index = Action {
     val alert: Alert = new Alert("", "")
