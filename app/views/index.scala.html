@@ -1,4 +1,4 @@
-@(loginForm:Form[Employee],message:String)
+@(signinForm:Form[Employee],message:String)
 @import helper._
 @import helper.twitterBootstrap._
 
@@ -16,12 +16,12 @@
             <legend>@message</legend>
                        
             @inputText(
-                loginForm("email"), '_label -> "Email ",
+                signinForm("email"), '_label -> "Email ",
                 '_help -> "Enter a valid email address."
             )
             
             @inputPassword(
-                loginForm("password"), 
+                signinForm("password"), 
                 '_label -> "Password",
                 '_help -> "A password must be at least 6 characters. "
             )
