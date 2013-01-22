@@ -21,6 +21,15 @@
    </header>
    
    <section id="main">
+   
+   @**************************@
+   @if(Common.alert.alertType != ""){
+   		<div class="alert-message @Common.alert.alertType">  
+  			<a class="close" data-dismiss="alert">×</a>  
+  			<strong style="text-transform: capitalize;">@Common.alert.alertType ! </strong>@Common.alert.message  
+		</div> 
+		}
+	@*****************************@
             @content
             
              <footer>

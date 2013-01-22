@@ -4,12 +4,7 @@
 @import helper.twitterBootstrap._
 
 @main(Html("User Created!")) {
-@if(Common.alert.alertType != ""){
-   		<div class="alert-message @Common.alert.alertType">  
-  			<a class="close" data-dismiss="alert">×</a>  
-  			<strong style="text-transform: capitalize;">@Common.alert.alertType ! </strong>@Common.alert.message  
-		</div> 
-		}
+
 <fieldset>
 	<h1>Welcome @employee.email !</h1>
 	
