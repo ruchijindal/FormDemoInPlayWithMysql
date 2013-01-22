@@ -17,7 +17,7 @@ object Application extends Controller {
   /**
    * Login In Form
    */
-  val signUpForm = Form(
+  val signInForm = Form(
     Forms.mapping(
       "id" -> ignored(NotAssigned: Pk[Int]),
       "email" -> email,
@@ -56,7 +56,7 @@ object Application extends Controller {
   def index = Action {
     val alert: Alert = new Alert("", "")
     Common.setAlert(alert)
-    Ok(views.html.index(signUpForm, "Form Demo in Play2.0 With Mysql As Database"))
+    Ok(views.html.index(signInForm, "Form Demo in Play2.0 With Mysql As Database"))
   }
 
   /**
@@ -65,7 +65,7 @@ object Application extends Controller {
   def authenticateUser = Action { implicit request =>
     val alert: Alert = new Alert("", "")
     Common.setAlert(alert)
-    signUpForm.bindFromRequest.fold(
+    signInForm.bindFromRequest.fold(
       errors => BadRequest(views.html.index(errors, "There is some error")),
       employee => {
         val employeeOpt = Employee.authenticate(employee)
