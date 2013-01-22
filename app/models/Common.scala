@@ -1,6 +1,7 @@
 package models
 
 import play.api.Play
+import anorm._
 
 /**
  * class to show alert
@@ -14,5 +15,6 @@ object Common {
 
   var alert: Alert = new Alert("", "")
   def setAlert(alert: Alert): Unit = this.alert = alert
+
 
 }

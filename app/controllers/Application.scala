@@ -9,6 +9,8 @@ import anorm._
 import models.Employee
 import models.Common
 import models.Alert
+import models.EmployeeDetail
+import play.api.data.validation.Constraints._
 
 object Application extends Controller {
 
@@ -39,6 +41,18 @@ object Application extends Controller {
         user => Some(user.email, (user.password, ""))
       })
 
+  /**
+   * Employee Detail Form
+   */
+  val employeeDetailForm = Form(
+    Forms.mapping(
+      "id" -> ignored(NotAssigned: Pk[Int]),
+      "employeeId" -> optional(number),
+      "name" -> nonEmptyText,
+      "designation" -> nonEmptyText,
+      "address" -> nonEmptyText,
+      "contact_no" -> (text verifying pattern("""[0-9.+]+""".r, error = "A valid phone number is required")))(EmployeeDetail.apply)(EmployeeDetail.unapply))
+
   def index = Action {
     val alert: Alert = new Alert("", "")
     Common.setAlert(alert)
@@ -63,7 +77,14 @@ object Application extends Controller {
             Ok(views.html.index(invalidCredentialsForm, "Invalid Credentials"))
           case Some(authemployee: Employee) =>
             val userSession = request.session + ("userId" -> authemployee.id.toString)
-            Ok(views.html.employeeDetail(authemployee)).withSession(userSession)
+            val employeeDetailOpt = Employee.employeeDetail(authemployee.id.get)
+            employeeDetailOpt match {
+              case None => Ok(views.html.employeeDetail(Application.employeeDetailForm, authemployee)).withSession(userSession)
+              case Some(employeeDetailFound: EmployeeDetail) =>
+                val employeeDetailFormWithDetails = Application.employeeDetailForm.fill(employeeDetailFound)
+                Ok(views.html.employeeDetail(employeeDetailFormWithDetails, authemployee)).withSession(userSession)
+            }
+
         }
       })
 
@@ -94,8 +115,8 @@ object Application extends Controller {
             val employeeRegistered = Employee.findByEmployeeId(employee_Id).get
             val alert: Alert = new Alert("success", "Employee Registered")
             Common.setAlert(alert)
-            val userSession = request.session + ("userId" -> employeeRegistered.id.toString)
-            Ok(views.html.employeeDetail(employeeRegistered)).withSession(userSession)
+            val userSession = request.session + ("userId" -> employee_Id.toString)
+            Ok(views.html.employeeDetail(Application.employeeDetailForm, employeeRegistered)).withSession(userSession)
           case false =>
             val alert: Alert = new Alert("error", "Email Id Already Exist")
             Common.setAlert(alert)
@@ -107,6 +128,50 @@ object Application extends Controller {
 
   }
 
+  def saveEmployeeDetail = Action { implicit request =>
+    if (request.session.get("userId") == None) {
+      Results.Redirect("/")
+    } else {
+      val employeeId = request.session.get("userId").get.toInt
+      val employee = Employee.findByEmployeeId(employeeId).get
+      employeeDetailForm.bindFromRequest.fold(
+        errors => BadRequest(views.html.employeeDetail(errors, employee)),
+        employeeDetail => {
+          val employeeDetailOpt = Employee.employeeDetail(employee.id.get)
+          employeeDetailOpt match {
+            case None =>
+              val updatedEmployeeDetail = EmployeeDetail(NotAssigned, Option(employeeId), employeeDetail.name,
+                employeeDetail.designation, employeeDetail.address, employeeDetail.contact_no)
+              EmployeeDetail.insert(updatedEmployeeDetail)
+              val alert: Alert = new Alert("success", "Employee Details Saved")
+              Common.setAlert(alert)
+            case Some(employeeDetailFound: EmployeeDetail) =>
+              val updatedEmployeeDetail = EmployeeDetail(employeeDetailFound.id, employeeDetailFound.employeeId, employeeDetail.name,
+                employeeDetail.designation, employeeDetail.address, employeeDetail.contact_no)
+              EmployeeDetail.update(updatedEmployeeDetail)
+              val alert: Alert = new Alert("success", "Employee Details Updated")
+              Common.setAlert(alert)
+          }
+          Results.Redirect("/employeeDetail")
+        })
+    }
+  }
+
+  /**
+   * Redirect To employee detail page
+   */
+
+  def employeeDetail = Action { implicit request =>
+    val employeeId = request.session.get("userId").get.toInt
+    val employee = Employee.findByEmployeeId(employeeId).get
+    val employeeDetailOpt = Employee.employeeDetail(employee.id.get)
+    employeeDetailOpt match {
+      case None => Ok(views.html.employeeDetail(Application.employeeDetailForm, employee))
+      case Some(employeeDetailFound: EmployeeDetail) =>
+        val formFill = Application.employeeDetailForm.fill(employeeDetailFound)
+        Ok(views.html.employeeDetail(formFill, employee))
+    }
+  }
   /**
    * Log Out
    */

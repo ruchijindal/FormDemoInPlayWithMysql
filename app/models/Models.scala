@@ -7,6 +7,7 @@ import anorm._
 import anorm.SqlParser._
 
 case class Employee(id: Pk[Int] = NotAssigned, email: String, password: String)
+case class EmployeeDetail(id: Pk[Int] = NotAssigned, employeeId: Option[Int], name: String, designation: String, address: String, contact_no: String)
 
 object Employee {
 
@@ -19,6 +20,13 @@ object Employee {
       get[String]("employee.password") map {
         case id ~ email ~ password => Employee(id, email, password)
       }
+  }
+
+  /**
+   * Parse a (Employee,EmployeeDetail) from a ResultSet
+   */
+  val withEmployeeDetail = Employee.simple ~ (EmployeeDetail.simple ?) map {
+    case employee ~ employeeDetail => (employee, employeeDetail)
   }
 
   /**
@@ -107,6 +115,83 @@ object Employee {
   def delete = {
     DB.withConnection { implicit connection =>
       SQL("delete from EMPLOYEE").executeUpdate()
+    }
+  }
+
+  /**
+   * Find Employee With Employee Detail
+   */
+
+  def employeeDetail(employeeId: Int) = {
+    DB.withConnection { implicit connection =>
+      val employeeDetail = SQL(
+        """
+          select * from EMPLOYEE_DETAIL
+          where EMPLOYEE_ID = {employeeId}
+        """).on(
+          'employeeId -> employeeId).as(EmployeeDetail.simple.singleOpt)
+      employeeDetail
+    }
+  }
+
+}
+
+object EmployeeDetail {
+
+  /**
+   * Parse a Employeedetail from a ResultSet
+   */
+  val simple = {
+    get[Pk[Int]]("employee_detail.employee_detail_id") ~
+      get[Option[Int]]("employee_detail.employee_id") ~
+      get[String]("employee_detail.name") ~
+      get[String]("employee_detail.designation") ~
+      get[String]("employee_detail.address") ~
+      get[String]("employee_detail.contact_no") map {
+        case id ~ employeeId ~ name ~ designation ~ address ~ contact_no =>
+          EmployeeDetail(id, employeeId, name, designation, address, contact_no)
+      }
+  }
+
+  /**
+   * Register a new employee.
+   *
+   * @param employee The computer values.
+   */
+  def insert(employeeDetail: EmployeeDetail): Int = {
+    DB.withConnection { implicit connection =>
+      SQL(
+        """
+          insert into EMPLOYEE_DETAIL(EMPLOYEE_ID ,NAME,DESIGNATION,ADDRESS,CONTACT_NO) values (
+            {employeeId}, {name},{designation},{address},{contact_no}
+          )
+        """).on(
+          'employeeId -> employeeDetail.employeeId.get,
+          'name -> employeeDetail.name,
+          'designation -> employeeDetail.designation,
+          'address -> employeeDetail.address,
+          'contact_no -> employeeDetail.contact_no).executeUpdate()
+    }
+  }
+
+  /**
+   * Update a employee detail.
+   *
+   * @param employeeDetail is EmployeeDetail
+   */
+  def update(employeeDetail: EmployeeDetail) = {
+    DB.withConnection { implicit connection =>
+      SQL(
+        """
+          update EMPLOYEE_DETAIL
+          set NAME = {name}, DESIGNATION = {designation}, ADDRESS = {address}, CONTACT_NO = {contact_no}
+          where EMPLOYEE_ID = {employeeId}
+        """).on(
+          'employeeId -> employeeDetail.employeeId.get,
+          'name -> employeeDetail.name,
+          'designation -> employeeDetail.designation,
+          'address -> employeeDetail.address,
+          'contact_no -> employeeDetail.contact_no).executeUpdate()
     }
   }
 
